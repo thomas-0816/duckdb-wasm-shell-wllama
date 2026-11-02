@@ -253,11 +253,8 @@ executed by llama.cpp. The default is Qwen3.5 0.8B.
 | `qwen3.5-2b` | Qwen3.5 2B | `unsloth/Qwen3.5-2B-GGUF` | `Qwen3.5-2B-UD-Q4_K_XL.gguf` | 1.2 GB |
 | `qwen3.5-4b` | Qwen3.5 4B | `unsloth/Qwen3.5-4B-GGUF` | `Qwen3.5-4B-UD-Q4_K_XL.gguf` | 2.6 GB |
 | `minicpm5-1b` | MiniCPM5 1B | `openbmb/MiniCPM5-1B-GGUF` | `MiniCPM5-1B-Q4_K_M.gguf` | 0.7 GB |
-| `lfm3-1.7b` | LFM3 1.7B | `LiquidAI/LFM3-1.7B-GGUF` | `LFM3-1.7B-QAD-Q4_0.gguf` | 1.0 GB |
 
-All models use a 16,384-token context. The LFM3 entry is present in the config
-but disabled in the model selector. Check each model's license before use;
-LFM3 has commercial usage restrictions.
+All models use a 16,384-token context. Check each model's license before use.
 
 The first load downloads the selected model. Later loads reuse the browser
 cache. Larger models need more GPU memory and may fail on low-end hardware.
