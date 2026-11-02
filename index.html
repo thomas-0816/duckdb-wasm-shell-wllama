@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DuckDB WASM Shell + Chat</title>
+<link rel="icon" href="data:,">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css" crossorigin="anonymous">
+
+<!--
+  The left panel runs the official DuckDB v2 web shell frontend from
+  shell.duckdb.org.  The frontend talks to the DuckDB engine worker over a
+  small binary "wire" protocol; see DuckShell below.
+-->
+<script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.js" crossorigin="anonymous"></script>
+
+<link rel="stylesheet" href="./index.css">
+</head>
+<body>
+<div class="app">
+  <section class="panel shell-panel">
+    <header class="panel-header">
+      <div class="title-group">
+        <span class="logo" id="duck-logo"><span class="duck">🦆</span></span>
+        <div>
+          <h1>DuckDB WASM Shell</h1>
+          <p class="subtitle">In-memory analytical SQL · DuckDB v2</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <label class="mode-picker" title="DuckDB output mode (.mode)">
+          <span class="mode-dot"></span>
+          <select id="mode-select" aria-label="DuckDB output mode">
+            <option value="markdown">markdown</option>
+            <option value="box">box</option>
+            <option value="duckbox" selected>duckbox</option>
+            <option value="table">table</option>
+            <option value="column">column</option>
+            <option value="line">line</option>
+            <option value="list">list</option>
+            <option value="csv">csv</option>
+            <option value="json">json</option>
+            <option value="jsonlines">jsonlines</option>
+            <option value="html">html</option>
+            <option value="latex">latex</option>
+            <option value="insert">insert</option>
+            <option value="ascii">ascii</option>
+            <option value="quote">quote</option>
+            <option value="tabs">tabs</option>
+            <option value="tcl">tcl</option>
+            <option value="trash">trash</option>
+          </select>
+        </label>
+        <button id="btn-shell-import" class="btn ghost" title="Import CSV, Parquet, JSON, or DuckDB files into the shell">Import</button>
+        <button id="btn-shell-clear" class="btn ghost" title="Clear the shell">Clear</button>
+      </div>
+    </header>
+    <input type="file" id="shell-file-input" multiple hidden>
+    <div class="terminal-wrap" id="terminal-wrap">
+      <div id="terminal"></div>
+    </div>
+    <footer class="panel-footer">
+      <span><kbd>Enter</kbd> run</span>
+      <span><kbd>↑</kbd><kbd>↓</kbd> history</span>
+      <span><kbd>Ctrl</kbd>+<kbd>L</kbd> clear</span>
+      <span class="spacer"></span>
+      <span id="db-status">starting DuckDB v2…</span>
+    </footer>
+  </section>
+
+  <div class="resizer" id="panel-resizer" role="separator" aria-orientation="vertical"
+       aria-label="Resize chat panel" aria-controls="chat-panel"
+       title="Drag to resize · double-click to reset" tabindex="0"></div>
+
+  <section class="panel chat-panel" id="chat-panel">
+    <header class="panel-header">
+      <div class="title-group">
+        <span class="logo">💬</span>
+        <div>
+          <h1>DuckDB Chat</h1>
+          <p class="subtitle" id="model-subtitle">Qwen3.5 0.8B · local WebGPU</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <span class="badge" id="ctx-badge" title="Context usage in tokens">ctx 0/16,384</span>
+        <select id="model-select" class="select" title="Choose a local GGUF model">
+          <!--<option value="lfm3-1.7b">LFM3 1.7B (QAD Q4_0) commercial usage restricted</option>-->
+          <option value="qwen3.5-0.8b" selected>Qwen3.5 0.8B (Q4_0)</option>
+          <option value="qwen3.5-2b">Qwen3.5 2B (Q4_K_XL)</option>
+          <option value="qwen3.5-4b">Qwen3.5 4B (Q4_K_XL)</option>
+          <option value="minicpm5-1b">MiniCPM5 1B (Q4_K_M)</option>
+        </select>
+        <button id="btn-new-chat" class="btn ghost" title="Clear the conversation">Clear</button>
+      </div>
+    </header>
+    <div class="progress" id="model-progress-wrap"><div id="model-progress"></div></div>
+    <div class="chat-messages" id="chat-messages">
+      <div class="welcome" id="welcome">
+        <strong>Ask questions about your DuckDB data.</strong><br>
+        The assistant can call <code>query(...)</code> to inspect tables, columns,
+        schemas, and data, and <code>help(...)</code> to search the bundled DuckDB
+        manual. Query results appear in the shell on the left in the selected output mode,
+        and the last 500 lines of shell output are sent with each message so you can ask
+        about earlier results. Try:
+        <em>“List the tables and their columns.”</em>
+      </div>
+    </div>
+    <div class="composer">
+      <textarea id="chat-input" rows="1" placeholder="Ask about your data…"></textarea>
+      <button id="btn-stop" class="btn danger hidden">Stop</button>
+    </div>
+    <div class="chat-status" id="chat-status">
+      <span class="chat-status-text" id="chat-status-text">Loading model…</span>
+      <span class="chat-percent hidden" id="chat-percent"></span>
+      <button type="button" class="chat-cache-btn" id="btn-cache" title="Show cached model files">Cached models</button>
+    </div>
+  </section>
+</div>
+
+<dialog class="cache-dialog" id="cache-dialog">
+  <div class="cache-dialog-head">
+    <div>
+      <h2>Cached models</h2>
+      <p id="cache-summary">Reading browser cache…</p>
+    </div>
+    <button type="button" class="btn ghost" id="cache-close">Close</button>
+  </div>
+  <div class="cache-list" id="cache-list"></div>
+  <div class="cache-dialog-actions">
+    <button type="button" class="btn danger" id="cache-clear">Clear cache</button>
+  </div>
+</dialog>
+
+<script type="module" src="./duckdb-main.js"></script>
+</body>
+</html>
