@@ -14,15 +14,6 @@ export const MODELS = {
     nCtx: 16384,
     sampling: { temperature: 0.9, top_p: 0.95, repeat_penalty: 1.0 },
   },
-  "lfm3-1.7b": {
-    label: "LFM3 1.7B (QAD Q4_0) Commercial usage restricted",
-    subtitle: "LFM3 1.7B · local WebGPU",
-    repo: "LiquidAI/LFM3-1.7B-GGUF",
-    file: "LFM3-1.7B-QAD-Q4_0.gguf",
-    size: "1.0 GB",
-    nCtx: 16384,
-    sampling: { temperature: 0.1, top_p: 0.95, top_k: 50, repeat_penalty: 1.1 },
-  },
   "qwen3.5-0.8b": {
     label: "Qwen3.5 0.8B (Q4_0)",
     subtitle: "Qwen3.5 0.8B · local WebGPU",
