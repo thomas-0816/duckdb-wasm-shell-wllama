@@ -2,8 +2,8 @@
 
 A browser-only SQL workbench: the official DuckDB v2 WebAssembly shell on the
 left and a small local LLM chat on the right. The chat model runs with
-llama.cpp (through wllama) and can inspect the live database, run SQL, and
-search the bundled DuckDB manual.
+llama.cpp (through wllama) and WebAssembly **completely inside the browser**,
+can inspect the live database, run SQL, and search the bundled DuckDB manual.
 
 **Live demo: https://thomas-0816.github.io/duckdb-wasm-shell-wllama/**
 
