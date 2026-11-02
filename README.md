@@ -7,24 +7,20 @@ search the bundled DuckDB manual.
 
 **Live demo: https://thomas-0816.github.io/duckdb-wasm-shell-wllama/**
 
+**Only Chromium-based browsers with WebGPU are supported.** It is tested with
+recent Chrome, Chromium, and ungoogled-chromium builds. Firefox and Safari
+are not supported. A CPU fallback exists, but it is much slower and is not
+the intended mode.
+
 ## Demo
 
-<video src="https://thomas-0816.github.io/duckdb-wasm-shell-wllama/demo.mp4" poster="https://thomas-0816.github.io/duckdb-wasm-shell-wllama/demo-poster.jpg" controls muted autoplay loop playsinline preload="metadata" width="960">
-  <a href="https://thomas-0816.github.io/duckdb-wasm-shell-wllama/demo.mp4"><img src="https://thomas-0816.github.io/duckdb-wasm-shell-wllama/demo-poster.jpg" alt="DuckDB WASM Shell and Chat demo" width="960"></a>
-</video>
-
-[▶ Watch the demo video](https://thomas-0816.github.io/duckdb-wasm-shell-wllama/demo.mp4) (23 s, no audio)
+[![Watch the demo video](https://thomas-0816.github.io/duckdb-wasm-shell-wllama/demo-poster.jpg)](https://thomas-0816.github.io/duckdb-wasm-shell-wllama/demo.mp4)
 
 > **Experimental proof of concept**
 >
 > This project is a proof of concept, not a production tool. Expect rough
 > edges, model mistakes, and browser-specific behavior. APIs, models, and the
 > UI may change without notice.
->
-> **Only Chromium-based browsers with WebGPU are supported.** It is tested with
-> recent Chrome, Chromium, and ungoogled-chromium builds. Firefox and Safari
-> are not supported. A CPU fallback exists, but it is much slower and is not
-> the intended mode.
 
 ## Requirements
 
@@ -319,6 +315,8 @@ fails on the manual's Liquid-like link syntax.
 ## Limitations
 
 - This is an experimental proof of concept.
+- WebGPU currently works only in Chrome and other Chromium-based browsers.
+  Firefox and Safari are not supported.
 - Small models can produce wrong SQL, ignore tools, or hallucinate DuckDB
   behavior. Use the shell and the bundled manual as the source of truth.
 - CPU fallback works but is significantly slower.
@@ -326,12 +324,6 @@ fails on the manual's Liquid-like link syntax.
 - Data lives in memory and is lost on refresh.
 - WebGPU support and available GPU memory vary by browser and device.
 - Do not load sensitive data into a public demo.
-
-## Privacy
-
-SQL execution and model inference happen in the browser. There is no backend
-server for either. The page fetches static assets from GitHub Pages, jsDelivr,
-and `shell.duckdb.org`, and downloads model weights from Hugging Face.
 
 ## License
 
