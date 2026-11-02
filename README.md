@@ -1,4 +1,4 @@
-# DuckDB WASM Shell + Chat
+# DuckDB WASM Shell + Wllama Chat
 
 A browser-only SQL workbench: the official DuckDB v2 WebAssembly shell on the
 left and a small local LLM chat on the right. The chat model runs with
