@@ -12,9 +12,9 @@ recent Chrome, Chromium, and ungoogled-chromium builds. Firefox and Safari
 are not supported. A CPU fallback exists, but it is much slower and is not
 the intended mode.
 
-## Demo
+## Demo Video
 
-[![Watch the demo video](https://thomas-0816.github.io/duckdb-wasm-shell-wllama/demo-poster.jpg)](https://thomas-0816.github.io/duckdb-wasm-shell-wllama/demo.mp4)
+[![DuckDB WASM Shell and Chat demo](demo.webp)](https://thomas-0816.github.io/duckdb-wasm-shell-wllama/demo.mp4)
 
 > **Experimental proof of concept**
 >
@@ -301,6 +301,7 @@ This script uses only Node built-ins, so `npm install` is not required.
 | `wllama/index.min.js` | Local wllama browser runtime (llama.cpp wrapper) |
 | `wllama/wllama.wasm` | Local llama.cpp WebAssembly build used by wllama |
 | `demo.mp4` | Demo recording embedded in this README |
+| `demo.webp` | Looping animated preview embedded in this README |
 | `demo-poster.jpg` | Poster frame for the demo video |
 | `.nojekyll` | Tells GitHub Pages to serve files without Jekyll |
 | `README.md` | This file |
