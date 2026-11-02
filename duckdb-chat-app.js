@@ -19,6 +19,8 @@ export class ChatApp {
     this.loading = false;
     this.generating = false;
     this.abortController = null;
+    this.streamStarted = false;
+    this.turnId = 0;
     this.pendingPrompt = null;
     this.suppressAbortMessage = false;
     this.activeBubble = null;
@@ -639,6 +641,7 @@ export class ChatApp {
   }
 
   async startPrompt(text) {
+    const turnId = ++this.turnId;
     this.addUserMessage(text);
     this.stripShellContext();
     const context = this.shellContext();
@@ -647,15 +650,18 @@ export class ChatApp {
       content: context ? `${text}\n\n${context}` : text,
     });
     this.generating = true;
+    this.streamStarted = false;
     this.abortController = new AbortController();
     this.autoScroll = true;
     this.updateComposer();
     this.setStatus("Thinking…");
 
     try {
-      await this.runAssistantTurn();
+      await this.runAssistantTurn(turnId);
+      if (turnId !== this.turnId) return;
       this.setStatus("Ready.", "ready");
     } catch (error) {
+      if (turnId !== this.turnId) return;
       if (error && (error.name === "AbortError" || /abort/i.test(String(error.message)))) {
         this.sanitizeAbortedMessages();
         if (!this.pendingPrompt && !this.suppressAbortMessage) {
@@ -668,6 +674,7 @@ export class ChatApp {
         this.setStatus(`Error: ${message}`, "error");
       }
     } finally {
+      if (turnId !== this.turnId) return;
       this.activeBubble?.stop();
       this.activeBubble = null;
       this.generating = false;
@@ -686,9 +693,45 @@ export class ChatApp {
   }
 
   stop() {
-    if (this.abortController) {
-      this.abortController.abort();
-    }
+    if (!this.abortController) return;
+    const prefill = this.generating && !this.streamStarted;
+    this.abortController.abort();
+    if (prefill) this.stopPrefill();
+  }
+
+  // Prompt processing runs inside the wasm worker and cannot see the abort
+  // signal until the first token. Terminate the worker instead of waiting.
+  stopPrefill() {
+    this.turnId++;
+    this.generating = false;
+    this.abortController = null;
+    this.streamStarted = false;
+    this.activeBubble?.remove();
+    this.activeBubble = null;
+    const next = this.pendingPrompt;
+    this.pendingPrompt = null;
+    this.modelLoaded = false;
+    this.loading = false;
+    this.suppressAbortMessage = false;
+    this.setStatus("Stopped. Reloading model...");
+    this.updateComposer();
+    if (!next) this.addErrorMessage("Generation stopped.");
+    const dying = this.wllama;
+    this.wllama = null;
+    if (dying) dying.exit().catch(() => {});
+    this.loadModel(this.modelKey).then(
+      () => {
+        if (next) {
+          next.resolve();
+          this.startPrompt(next.text);
+        }
+      },
+      (error) => {
+        const message = error && error.message ? error.message : String(error);
+        this.addErrorMessage(message);
+        this.setStatus(`Error: ${message}`, "error");
+      }
+    );
   }
 
   throwIfAborted() {
@@ -714,8 +757,9 @@ export class ChatApp {
     }
   }
 
-  async runAssistantTurn() {
+  async runAssistantTurn(turnId) {
     for (let iteration = 0; iteration < this.maxToolIterations; iteration++) {
+      if (turnId !== this.turnId) return;
       this.throwIfAborted();
       const bubble = this.addAssistantBubble();
       this.activeBubble = bubble;
@@ -726,6 +770,7 @@ export class ChatApp {
 
       console.log("DuckDB chat prompt", JSON.stringify(this.messages, null, 2));
 
+      this.streamStarted = false;
       const stream = await this.wllama.createChatCompletion({
         messages: this.messages,
         tools: TOOLS,
@@ -742,6 +787,7 @@ export class ChatApp {
       });
 
       for await (const chunk of stream) {
+        if (turnId !== this.turnId) return;
         if (chunk.prompt_progress && chunk.prompt_progress.total) {
           const { processed, total } = chunk.prompt_progress;
           bubble.setThinking(`Reading prompt ${processed}/${total}`);
@@ -772,6 +818,7 @@ export class ChatApp {
 
         const choice = chunk.choices?.[0];
         if (!choice) continue;
+        this.streamStarted = true;
         if (choice.finish_reason) finishReason = choice.finish_reason;
         const delta = choice.delta || {};
 
@@ -799,6 +846,7 @@ export class ChatApp {
 
       }
 
+      if (turnId !== this.turnId) return;
       this.throwIfAborted();
       const calls = [...toolCalls.values()].filter((call) => call.name);
       if (finishReason === "length") {
@@ -844,6 +892,7 @@ export class ChatApp {
         this.messages.push(assistantMessage);
 
         for (const call of assistantMessage.tool_calls) {
+          if (turnId !== this.turnId) return;
           this.throwIfAborted();
           let args = {};
           try {
@@ -891,6 +940,7 @@ export class ChatApp {
           }
 
           this.throwIfAborted();
+          if (turnId !== this.turnId) return;
           this.addToolResultCard(result, ok, name);
           this.messages.push({
             role: "tool",

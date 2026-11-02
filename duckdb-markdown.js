@@ -4,6 +4,17 @@ import { escapeHtml } from "./duckdb-utils.js";
 // Tiny, safe Markdown renderer (enough for chat output)
 // ---------------------------------------------------------------------------
 
+function duckdbDocsUrl(href) {
+  // The bundled manual uses internal anchors such as
+  // "#docs:2.0:sql:statements:pivot::simplified-pivot-syntax".
+  const body = href.slice("#docs:".length);
+  const [pathPart, section] = body.split("::");
+  const segments = pathPart.split(":");
+  const page = segments[segments.length - 1];
+  const anchor = section && section !== page ? `#${section}` : "";
+  return `https://duckdb.org/docs/${segments.join("/")}${anchor}`;
+}
+
 function inlineMarkdown(text) {
   const codes = [];
   let s = escapeHtml(text);
@@ -14,9 +25,10 @@ function inlineMarkdown(text) {
     return `\u0000CODE${codes.length - 1}\u0000`;
   });
 
-  // Links (only http/https, so no javascript: URLs).
-  s = s.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, (_, label, href) => {
-    return `<a href="${href}" target="_blank" rel="noreferrer noopener">${label}</a>`;
+  // Links (http/https and DuckDB manual anchors, so no javascript: URLs).
+  s = s.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+|#docs:[^\s)]+)\)/g, (_, label, href) => {
+    const url = href.startsWith("#docs:") ? duckdbDocsUrl(href) : href;
+    return `<a href="${url}" target="_blank" rel="noreferrer noopener">${label}</a>`;
   });
 
   s = s.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
