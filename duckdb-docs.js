@@ -1,10 +1,10 @@
 import { escapeRegExp } from "./duckdb-utils.js";
 
 // ---------------------------------------------------------------------------
-// Bundled DuckDB manual search (duckdb-docs.md + duckdb-docs-index.json)
+// Bundled DuckDB manual search (duckdb-docs.txt + duckdb-docs-index.json)
 // ---------------------------------------------------------------------------
 
-const DOCS_URL = "./duckdb-docs.md";
+const DOCS_URL = "./duckdb-docs.txt";
 const DOCS_INDEX_URL = "./duckdb-docs-index.json";
 const DOCS_MAX_RESULTS = 4;
 const DOCS_SNIPPET_CHARS = 1600;
@@ -347,7 +347,7 @@ export async function searchDuckDBDocs(query) {
   scored.sort((a, b) => b.score - a.score || a.section.length - b.section.length);
   const top = scored.slice(0, DOCS_MAX_RESULTS);
   if (top.length === 0) {
-    return `No matches for "${query}" in duckdb-docs.md. Try a function name, a statement (e.g. PIVOT), or an error message.`;
+    return `No matches for "${query}" in duckdb-docs.txt. Try a function name, a statement (e.g. PIVOT), or an error message.`;
   }
 
   const snippetTerms = [...new Set(entries.map((entry) => entry.term))];
@@ -357,5 +357,5 @@ export async function searchDuckDBDocs(query) {
     return `### ${section.title}${anchor}\n\n${snippet || "(no body text)"}`;
   });
 
-  return `DuckDB manual results for "${query}" (from duckdb-docs.md):\n\n${parts.join("\n\n---\n\n")}`;
+  return `DuckDB manual results for "${query}" (from duckdb-docs.txt):\n\n${parts.join("\n\n---\n\n")}`;
 }

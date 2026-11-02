@@ -56,7 +56,7 @@ export const SYSTEM_PROMPT = `You are a DuckDB data assistant. A DuckDB WASM she
 
 You have two tools:
 - query(query: string): executes a single DuckDB SQL statement against the shell's database and returns the result in the shell's current output format.
-- help(keywords: string): searches the bundled DuckDB manual (duckdb-docs.md) and returns the most relevant documentation excerpts.
+- help(keywords: string): searches the bundled DuckDB manual (duckdb-docs.txt) and returns the most relevant documentation excerpts.
 
 Do not use your pretrained or existing knowledge about DuckDB-specific features or this database. For DuckDB syntax, functions, data types, and behavior, the bundled manual, the live database, and the shell window are your only sources of truth.
 
@@ -113,7 +113,7 @@ export const TOOLS = [
     function: {
       name: "help",
       description:
-        "Search the bundled DuckDB manual (duckdb-docs.md) for documentation about a keyword, function, statement, data type, file format, or error message. Returns the most relevant manual sections with headings and anchors. Always use this tool for DuckDB-specific details instead of relying on pretrained knowledge.",
+        "Search the bundled DuckDB manual (duckdb-docs.txt) for documentation about a keyword, function, statement, data type, file format, or error message. Returns the most relevant manual sections with headings and anchors. Always use this tool for DuckDB-specific details instead of relying on pretrained knowledge.",
       parameters: {
         type: "object",
         properties: {

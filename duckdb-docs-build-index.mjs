@@ -3,7 +3,7 @@
 // Run with: npm run build:docs-index
 //
 // The index keeps only section metadata and token postings. Section bodies
-// stay in duckdb-docs.md and are sliced lazily at query time, which keeps the
+// stay in duckdb-docs.txt and are sliced lazily at query time, which keeps the
 // first search fast and avoids lowercasing the whole manual up front.
 
 import { readFileSync, writeFileSync } from "node:fs";
@@ -11,7 +11,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const here = dirname(fileURLToPath(import.meta.url));
-const docsPath = resolve(here, "duckdb-docs.md");
+const docsPath = resolve(here, "duckdb-docs.txt");
 const indexPath = resolve(here, "duckdb-docs-index.json");
 
 const headingRe = /^(#{1,6})\s+(.+?)(?:\s+\{#([^}]+)\})?\s*$/;
